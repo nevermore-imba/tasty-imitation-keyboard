@@ -229,20 +229,12 @@ class GlobalColors: NSObject {
 //"blueColor": UIColor(hue: (211/360.0), saturation: 1.0, brightness: 1.0, alpha: 1),
 //"blueShadowColor": UIColor(hue: (216/360.0), saturation: 0.05, brightness: 0.43, alpha: 1),
 
-extension CGRect: Hashable {
-    public var hashValue: Int {
-        get {
-            return (origin.x.hashValue ^ origin.y.hashValue ^ size.width.hashValue ^ size.height.hashValue)
-        }
-    }
+extension CGRect: @retroactive Hashable {
+
 }
 
-extension CGSize: Hashable {
-    public var hashValue: Int {
-        get {
-            return (width.hashValue ^ height.hashValue)
-        }
-    }
+extension CGSize: @retroactive Hashable {
+
 }
 
 // handles the layout for the keyboard, including key spacing and arrangement
@@ -297,7 +289,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
     // CALL THESE FOR LAYOUT/APPEARANCE CHANGES //
     //////////////////////////////////////////////
     
-    func layoutKeys(_ pageNum: Int, uppercase: Bool, characterUppercase: Bool, shiftState: ShiftState) {
+    func layoutKeys(_ pageNum: Int, shiftState: ShiftState) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         
@@ -308,7 +300,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
                     self.positionKeys(p)
                 }
                 self.updateKeyAppearance()
-                self.updateKeyCaps(true, uppercase: uppercase, characterUppercase: characterUppercase, shiftState: shiftState)
+                self.updateKeyCaps(fullReset: true, shiftState: shiftState)
             }
         }
         
@@ -329,7 +321,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
         
         if type(of: self).shouldPoolKeys {
             self.updateKeyAppearance()
-            self.updateKeyCaps(true, uppercase: uppercase, characterUppercase: characterUppercase, shiftState: shiftState)
+            self.updateKeyCaps(fullReset: true, shiftState: shiftState)
         }
         
         CATransaction.commit()
@@ -397,7 +389,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
     
     // on fullReset, we update the keys with shapes, images, etc. as if from scratch; otherwise, just update the text
     // WARNING: if key cache is disabled, DO NOT CALL WITH fullReset MORE THAN ONCE
-    func updateKeyCaps(_ fullReset: Bool, uppercase: Bool, characterUppercase: Bool, shiftState: ShiftState) {
+    func updateKeyCaps(fullReset: Bool, shiftState: ShiftState) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         
@@ -412,20 +404,23 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
         }
         
         for (model, key) in self.modelToView {
-            self.updateKeyCap(key, model: model, fullReset: fullReset, uppercase: uppercase, characterUppercase: characterUppercase, shiftState: shiftState)
+            self.updateKeyCap(
+                key,
+                model: model,
+                fullReset: fullReset,
+                shiftState: shiftState
+            )
         }
         
         CATransaction.commit()
     }
     
-    func updateKeyCap(_ key: KeyboardKey, model: Key, fullReset: Bool, uppercase: Bool, characterUppercase: Bool, shiftState: ShiftState) {
+    func updateKeyCap(_ key: KeyboardKey, model: Key, fullReset: Bool, shiftState: ShiftState) {
+
         if fullReset {
             // font size
             switch model.type {
-            case
-            Key.KeyType.modeChange,
-            Key.KeyType.space,
-            Key.KeyType.return:
+            case .numberLetterSwitch, .whitespaces, .returnKey:
                 key.label.adjustsFontSizeToFitWidth = true
                 key.label.font = key.label.font.withSize(16)
             default:
@@ -434,8 +429,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
             
             // label inset
             switch model.type {
-            case
-            Key.KeyType.modeChange:
+            case .numberLetterSwitch:
                 key.labelInset = 3
             default:
                 key.labelInset = 0
@@ -443,17 +437,17 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
             
             // shapes
             switch model.type {
-            case Key.KeyType.shift:
+            case .shift:
                 if key.shape == nil {
                     let shiftShape = self.getShape(ShiftShape.self)
                     key.shape = shiftShape
                 }
-            case Key.KeyType.backspace:
+            case .delete:
                 if key.shape == nil {
                     let backspaceShape = self.getShape(BackspaceShape.self)
                     key.shape = backspaceShape
                 }
-            case Key.KeyType.keyboardChange:
+            case .keyboardChange:
                 if key.shape == nil {
                     let globeShape = self.getShape(GlobeShape.self)
                     key.shape = globeShape
@@ -463,7 +457,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
             }
             
             // images
-            if model.type == Key.KeyType.settings {
+            if model.type == .settings {
                 if let imageKey = key as? ImageKey {
                     if imageKey.image == nil {
                         let gearImage = UIImage(named: "gear")
@@ -474,33 +468,28 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
             }
         }
         
-        if model.type == Key.KeyType.shift {
+        if model.type == .shift {
             if key.shape == nil {
                 let shiftShape = self.getShape(ShiftShape.self)
                 key.shape = shiftShape
             }
             
             switch shiftState {
-            case .disabled:
+            case .lowercased:
                 key.isHighlighted = false
-            case .enabled:
+            case .uppercased:
                 key.isHighlighted = true
-            case .locked:
+            case .capslocked:
                 key.isHighlighted = true
             }
             
-            (key.shape as? ShiftShape)?.withLock = (shiftState == .locked)
+            (key.shape as? ShiftShape)?.withLock = (shiftState == .capslocked)
         }
-        
-        self.updateKeyCapText(key, model: model, uppercase: uppercase, characterUppercase: characterUppercase)
-    }
-    
-    func updateKeyCapText(_ key: KeyboardKey, model: Key, uppercase: Bool, characterUppercase: Bool) {
+
         if model.type == .character {
-            key.text = model.keyCapForCase(characterUppercase)
-        }
-        else {
-            key.text = model.keyCapForCase(uppercase)
+            key.text = model.keyCapForCase(shiftState: shiftState)
+        } else {
+            key.text = model.keyCapForCase(shiftState: shiftState)
         }
     }
     
@@ -509,15 +498,12 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
     ///////////////
     
     func setAppearanceForKey(_ key: KeyboardKey, model: Key, darkMode: Bool, solidColorMode: Bool) {
-        if model.type == Key.KeyType.other {
+        if model.type == .other {
             self.setAppearanceForOtherKey(key, model: model, darkMode: darkMode, solidColorMode: solidColorMode)
         }
         
         switch model.type {
-        case
-        Key.KeyType.character,
-        Key.KeyType.specialCharacter,
-        Key.KeyType.period:
+        case .character, .specialCharacter, .period:
             key.color = self.self.globalColors.regularKey(darkMode, solidColorMode: solidColorMode)
             if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
                 key.downColor = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
@@ -527,35 +513,28 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
             }
             key.textColor = (darkMode ? self.globalColors.darkModeTextColor : self.globalColors.lightModeTextColor)
             key.downTextColor = nil
-        case
-        Key.KeyType.space:
+        case .whitespaces:
             key.color = self.globalColors.regularKey(darkMode, solidColorMode: solidColorMode)
             key.downColor = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
             key.textColor = (darkMode ? self.globalColors.darkModeTextColor : self.globalColors.lightModeTextColor)
             key.downTextColor = nil
-        case
-        Key.KeyType.shift:
+        case .shift:
             key.color = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
             key.downColor = (darkMode ? self.globalColors.darkModeShiftKeyDown : self.globalColors.lightModeRegularKey)
             key.textColor = self.globalColors.darkModeTextColor
             key.downTextColor = self.globalColors.lightModeTextColor
-        case
-        Key.KeyType.backspace:
+        case .delete:
             key.color = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
             // TODO: actually a bit different
             key.downColor = self.globalColors.regularKey(darkMode, solidColorMode: solidColorMode)
             key.textColor = self.globalColors.darkModeTextColor
             key.downTextColor = (darkMode ? nil : self.globalColors.lightModeTextColor)
-        case
-        Key.KeyType.modeChange:
+        case .numberLetterSwitch:
             key.color = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
             key.downColor = nil
             key.textColor = (darkMode ? self.globalColors.darkModeTextColor : self.globalColors.lightModeTextColor)
             key.downTextColor = nil
-        case
-        Key.KeyType.return,
-        Key.KeyType.keyboardChange,
-        Key.KeyType.settings:
+        case .returnKey, .keyboardChange, .settings:
             key.color = self.globalColors.specialKey(darkMode, solidColorMode: solidColorMode)
             // TODO: actually a bit different
             key.downColor = self.globalColors.regularKey(darkMode, solidColorMode: solidColorMode)
@@ -570,8 +549,10 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
         key.borderColor = (self.darkMode ? self.globalColors.darkModeBorderColor : self.globalColors.lightModeBorderColor)
     }
     
-    func setAppearanceForOtherKey(_ key: KeyboardKey, model: Key, darkMode: Bool, solidColorMode: Bool) { /* override this to handle special keys */ }
-    
+    func setAppearanceForOtherKey(_ key: KeyboardKey, model: Key, darkMode: Bool, solidColorMode: Bool) {
+        /* override this to handle special keys */
+    }
+
     // TODO: avoid array copies
     // TODO: sizes stored not rounded?
     
@@ -582,9 +563,9 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
     // if pool is disabled, always returns a unique key view for the corresponding key model
     func pooledKey(key aKey: Key, model: Keyboard, frame: CGRect) -> KeyboardKey? {
         if !type(of: self).shouldPoolKeys {
-            var p: Int!
-            var r: Int!
-            var k: Int!
+            var p: Int = 0
+            var r: Int = 0
+            var k: Int = 0
             
             // TODO: O(N^2) in terms of total # of keys since pooledKey is called for each key, but probably doesn't matter
             var foundKey: Bool = false
@@ -938,7 +919,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
         var keysAfterSpace = 0
         var reachedSpace = false
         for key in row {
-            if key.type == Key.KeyType.space {
+            if key.type == .whitespaces {
                 reachedSpace = true
             }
             else {
@@ -976,7 +957,7 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
         var currentOrigin = frame.origin.x
         var beforeSpace: Bool = true
         for (k, key) in row.enumerated() {
-            if key.type == Key.KeyType.space {
+            if key.type == .whitespaces {
                 frames.append(CGRect(x: rounded(currentOrigin), y: frame.origin.y, width: spaceWidth, height: frame.height))
                 currentOrigin += (spaceWidth + gapWidth)
                 beforeSpace = false

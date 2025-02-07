@@ -11,17 +11,18 @@ import Foundation
 var counter = 0
 
 enum ShiftState {
-    case disabled
-    case enabled
-    case locked
+
+    case lowercased
+    case uppercased
+    case capslocked
     
-    func uppercase() -> Bool {
+    var isUppercased: Bool {
         switch self {
-        case .disabled:
+        case .lowercased:
             return false
-        case .enabled:
+        case .uppercased:
             return true
-        case .locked:
+        case .capslocked:
             return true
         }
     }
@@ -60,12 +61,12 @@ class Key: Hashable {
         case character
         case specialCharacter
         case shift
-        case backspace
-        case modeChange
+        case delete
+        case numberLetterSwitch
         case keyboardChange
         case period
-        case space
-        case `return`
+        case whitespaces
+        case returnKey
         case settings
         case other
     }
@@ -96,13 +97,13 @@ class Key: Hashable {
             switch self.type {
             case .shift:
                 return true
-            case .backspace:
+            case .delete:
                 return true
-            case .modeChange:
+            case .numberLetterSwitch:
                 return true
             case .keyboardChange:
                 return true
-            case .return:
+            case .returnKey:
                 return true
             case .settings:
                 return true
@@ -144,25 +145,23 @@ class Key: Hashable {
         self.uppercaseKeyCap = self.uppercaseOutput
     }
     
-    func outputForCase(_ uppercase: Bool) -> String {
-        if uppercase {
-            return uppercaseOutput ?? lowercaseOutput ?? ""
-        }
-        else {
-            return lowercaseOutput ?? uppercaseOutput ?? ""
+    func outputForCase(shiftState: ShiftState) -> String {
+        if shiftState.isUppercased {
+            return (uppercaseOutput ?? lowercaseOutput) ?? ""
+        } else {
+            return (lowercaseOutput ?? uppercaseOutput) ?? ""
         }
     }
     
-    func keyCapForCase(_ uppercase: Bool) -> String {
-        if uppercase {
-            return uppercaseKeyCap ?? lowercaseKeyCap ?? ""
-        }
-        else {
-            return lowercaseKeyCap ?? uppercaseKeyCap ?? ""
+    func keyCapForCase(shiftState: ShiftState) -> String {
+        if shiftState.isUppercased {
+            return (uppercaseKeyCap ?? lowercaseKeyCap) ?? ""
+        } else {
+            return (lowercaseKeyCap ?? uppercaseKeyCap) ?? ""
         }
     }
-}
 
-func ==(lhs: Key, rhs: Key) -> Bool {
-    return lhs.hashValue == rhs.hashValue
+    static func ==(lhs: Key, rhs: Key) -> Bool {
+        return lhs.hashValue == rhs.hashValue
+    }
 }

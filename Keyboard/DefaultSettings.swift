@@ -31,30 +31,21 @@ class DefaultSettings: ExtraView, UITableViewDataSource, UITableViewDelegate {
     
     // TODO: these probably don't belong here, and also need to be localized
     var settingsList: [(String, [String])] {
-        get {
-            return [
-                ("General Settings", [kAutoCapitalization, kPeriodShortcut, kKeyboardClicks]),
-                ("Extra Settings", [kSmallLowercase])
-            ]
-        }
+        return [
+            ("General Settings", [kAutoCapitalization, kPeriodShortcut, kKeyboardClicks])
+        ]
     }
     var settingsNames: [String:String] {
-        get {
-            return [
-                kAutoCapitalization: "Auto-Capitalization",
-                kPeriodShortcut:  "“.” Shortcut",
-                kKeyboardClicks: "Keyboard Clicks",
-                kSmallLowercase: "Allow Lowercase Key Caps"
-            ]
-        }
+        return [
+            kAutoCapitalization: "Auto-Capitalization",
+            kPeriodShortcut:  "“.” Shortcut",
+            kKeyboardClicks: "Keyboard Clicks"
+        ]
     }
     var settingsNotes: [String: String] {
-        get {
-            return [
-                kKeyboardClicks: "Please note that keyboard clicks will work only if “Allow Full Access” is enabled in the keyboard settings. Unfortunately, this is a limitation of the operating system.",
-                kSmallLowercase: "Changes your key caps to lowercase when Shift is off, making it easier to tell what mode you are in."
-            ]
-        }
+        return [
+            kKeyboardClicks: "Please note that keyboard clicks will work only if “Allow Full Access” is enabled in the keyboard settings. Unfortunately, this is a limitation of the operating system."
+        ]
     }
     
     required init(globalColors: GlobalColors.Type?, darkMode: Bool, solidColorMode: Bool) {
@@ -74,10 +65,10 @@ class DefaultSettings: ExtraView, UITableViewDataSource, UITableViewDelegate {
                 rootView.translatesAutoresizingMaskIntoConstraints = false
                 self.addSubview(rootView)
                 
-                let left = NSLayoutConstraint(item: rootView, attribute: NSLayoutAttribute.left, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.left, multiplier: 1, constant: 0)
-                let right = NSLayoutConstraint(item: rootView, attribute: NSLayoutAttribute.right, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.right, multiplier: 1, constant: 0)
-                let top = NSLayoutConstraint(item: rootView, attribute: NSLayoutAttribute.top, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.top, multiplier: 1, constant: 0)
-                let bottom = NSLayoutConstraint(item: rootView, attribute: NSLayoutAttribute.bottom, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.bottom, multiplier: 1, constant: 0)
+                let left = NSLayoutConstraint(item: rootView, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1, constant: 0)
+                let right = NSLayoutConstraint(item: rootView, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1, constant: 0)
+                let top = NSLayoutConstraint(item: rootView, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1, constant: 0)
+                let bottom = NSLayoutConstraint(item: rootView, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1, constant: 0)
                 
                 self.addConstraint(left)
                 self.addConstraint(right)
@@ -88,7 +79,7 @@ class DefaultSettings: ExtraView, UITableViewDataSource, UITableViewDelegate {
         
         self.tableView?.register(DefaultSettingsTableViewCell.self, forCellReuseIdentifier: "cell")
         self.tableView?.estimatedRowHeight = 44;
-        self.tableView?.rowHeight = UITableViewAutomaticDimension;
+        self.tableView?.rowHeight = UITableView.automaticDimension;
         
         // XXX: this is here b/c a totally transparent background does not support scrolling in blank areas
         self.tableView?.backgroundColor = UIColor.white.withAlphaComponent(0.01)
@@ -126,7 +117,7 @@ class DefaultSettings: ExtraView, UITableViewDataSource, UITableViewDelegate {
             let key = self.settingsList[indexPath.section].1[indexPath.row]
             
             if cell.sw.allTargets.count == 0 {
-                cell.sw.addTarget(self, action: #selector(DefaultSettings.toggleSetting(_:)), for: UIControlEvents.valueChanged)
+                cell.sw.addTarget(self, action: #selector(DefaultSettings.toggleSetting(_:)), for: .valueChanged)
             }
             
             cell.sw.isOn = UserDefaults.standard.bool(forKey: key)
@@ -183,7 +174,7 @@ class DefaultSettings: ExtraView, UITableViewDataSource, UITableViewDelegate {
         }
     }
     
-    func toggleSetting(_ sender: UISwitch) {
+    @objc func toggleSetting(_ sender: UISwitch) {
         if let cell = sender.superview as? UITableViewCell {
             if let indexPath = self.tableView?.indexPath(for: cell) {
                 let key = self.settingsList[indexPath.section].1[indexPath.row]
@@ -200,8 +191,8 @@ class DefaultSettingsTableViewCell: UITableViewCell {
     var longLabel: UITextView
     var constraintsSetForLongLabel: Bool
     var cellConstraints: [NSLayoutConstraint]
-    
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         self.sw = UISwitch()
         self.label = UILabel()
         self.longLabel = UITextView()
@@ -241,20 +232,20 @@ class DefaultSettingsTableViewCell: UITableViewCell {
         
         let hasLongText = self.longLabel.text != nil && !self.longLabel.text.isEmpty
         if hasLongText {
-            let switchSide = NSLayoutConstraint(item: sw, attribute: NSLayoutAttribute.right, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.right, multiplier: 1, constant: -sideMargin)
-            let switchTop = NSLayoutConstraint(item: sw, attribute: NSLayoutAttribute.top, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.top, multiplier: 1, constant: margin)
-            let labelSide = NSLayoutConstraint(item: label, attribute: NSLayoutAttribute.left, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.left, multiplier: 1, constant: sideMargin)
-            let labelCenter = NSLayoutConstraint(item: label, attribute: NSLayoutAttribute.centerY, relatedBy: NSLayoutRelation.equal, toItem: sw, attribute: NSLayoutAttribute.centerY, multiplier: 1, constant: 0)
+            let switchSide = NSLayoutConstraint(item: sw, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1, constant: -sideMargin)
+            let switchTop = NSLayoutConstraint(item: sw, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1, constant: margin)
+            let labelSide = NSLayoutConstraint(item: label, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1, constant: sideMargin)
+            let labelCenter = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: sw, attribute: .centerY, multiplier: 1, constant: 0)
             
             self.addConstraint(switchSide)
             self.addConstraint(switchTop)
             self.addConstraint(labelSide)
             self.addConstraint(labelCenter)
             
-            let left = NSLayoutConstraint(item: longLabel, attribute: NSLayoutAttribute.left, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.left, multiplier: 1, constant: sideMargin)
-            let right = NSLayoutConstraint(item: longLabel, attribute: NSLayoutAttribute.right, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.right, multiplier: 1, constant: -sideMargin)
-            let top = NSLayoutConstraint(item: longLabel, attribute: NSLayoutAttribute.top, relatedBy: NSLayoutRelation.equal, toItem: sw, attribute: NSLayoutAttribute.bottom, multiplier: 1, constant: margin)
-            let bottom = NSLayoutConstraint(item: longLabel, attribute: NSLayoutAttribute.bottom, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.bottom, multiplier: 1, constant: -margin)
+            let left = NSLayoutConstraint(item: longLabel, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1, constant: sideMargin)
+            let right = NSLayoutConstraint(item: longLabel, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1, constant: -sideMargin)
+            let top = NSLayoutConstraint(item: longLabel, attribute: .top, relatedBy: .equal, toItem: sw, attribute: .bottom, multiplier: 1, constant: margin)
+            let bottom = NSLayoutConstraint(item: longLabel, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1, constant: -margin)
             
             self.addConstraint(left)
             self.addConstraint(right)
@@ -266,11 +257,11 @@ class DefaultSettingsTableViewCell: UITableViewCell {
             self.constraintsSetForLongLabel = true
         }
         else {
-            let switchSide = NSLayoutConstraint(item: sw, attribute: NSLayoutAttribute.right, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.right, multiplier: 1, constant: -sideMargin)
-            let switchTop = NSLayoutConstraint(item: sw, attribute: NSLayoutAttribute.top, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.top, multiplier: 1, constant: margin)
-            let switchBottom = NSLayoutConstraint(item: sw, attribute: NSLayoutAttribute.bottom, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.bottom, multiplier: 1, constant: -margin)
-            let labelSide = NSLayoutConstraint(item: label, attribute: NSLayoutAttribute.left, relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.left, multiplier: 1, constant: sideMargin)
-            let labelCenter = NSLayoutConstraint(item: label, attribute: NSLayoutAttribute.centerY, relatedBy: NSLayoutRelation.equal, toItem: sw, attribute: NSLayoutAttribute.centerY, multiplier: 1, constant: 0)
+            let switchSide = NSLayoutConstraint(item: sw, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1, constant: -sideMargin)
+            let switchTop = NSLayoutConstraint(item: sw, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1, constant: margin)
+            let switchBottom = NSLayoutConstraint(item: sw, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1, constant: -margin)
+            let labelSide = NSLayoutConstraint(item: label, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1, constant: sideMargin)
+            let labelCenter = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: sw, attribute: .centerY, multiplier: 1, constant: 0)
             
             self.addConstraint(switchSide)
             self.addConstraint(switchTop)

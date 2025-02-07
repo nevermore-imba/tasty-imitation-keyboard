@@ -30,10 +30,10 @@ func defaultKeyboard() -> Keyboard {
         defaultKeyboard.add(key: keyModel, row: 2, page: 0)
     }
     
-    let backspace = Key(.backspace)
+    let backspace = Key(.delete)
     defaultKeyboard.add(key: backspace, row: 2, page: 0)
     
-    let keyModeChangeNumbers = Key(.modeChange)
+    let keyModeChangeNumbers = Key(.numberLetterSwitch)
     keyModeChangeNumbers.uppercaseKeyCap = "123"
     keyModeChangeNumbers.toMode = 1
     defaultKeyboard.add(key: keyModeChangeNumbers, row: 3, page: 0)
@@ -44,13 +44,13 @@ func defaultKeyboard() -> Keyboard {
     let settings = Key(.settings)
     defaultKeyboard.add(key: settings, row: 3, page: 0)
     
-    let space = Key(.space)
+    let space = Key(.whitespaces)
     space.uppercaseKeyCap = "space"
     space.uppercaseOutput = " "
     space.lowercaseOutput = " "
     defaultKeyboard.add(key: space, row: 3, page: 0)
     
-    let returnKey = Key(.return)
+    let returnKey = Key(.returnKey)
     returnKey.uppercaseKeyCap = "return"
     returnKey.uppercaseOutput = "\n"
     returnKey.lowercaseOutput = "\n"
@@ -68,7 +68,7 @@ func defaultKeyboard() -> Keyboard {
         defaultKeyboard.add(key: keyModel, row: 1, page: 1)
     }
     
-    let keyModeChangeSpecialCharacters = Key(.modeChange)
+    let keyModeChangeSpecialCharacters = Key(.numberLetterSwitch)
     keyModeChangeSpecialCharacters.uppercaseKeyCap = "#+="
     keyModeChangeSpecialCharacters.toMode = 2
     defaultKeyboard.add(key: keyModeChangeSpecialCharacters, row: 2, page: 1)
@@ -81,7 +81,7 @@ func defaultKeyboard() -> Keyboard {
     
     defaultKeyboard.add(key: Key(backspace), row: 2, page: 1)
     
-    let keyModeChangeLetters = Key(.modeChange)
+    let keyModeChangeLetters = Key(.numberLetterSwitch)
     keyModeChangeLetters.uppercaseKeyCap = "ABC"
     keyModeChangeLetters.toMode = 0
     defaultKeyboard.add(key: keyModeChangeLetters, row: 3, page: 1)
