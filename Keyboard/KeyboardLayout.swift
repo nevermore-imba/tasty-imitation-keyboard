@@ -774,13 +774,13 @@ class KeyboardLayout: NSObject, KeyboardKeyProtocol {
                 let totalGaps = bottomEdge + topEdge + rowGapTotal
                 let returnHeight = (bounds.height - totalGaps) / CGFloat(numRows)
                 return self.rounded(returnHeight)
-                }()
+            }()
             
             let letterKeyWidth: CGFloat = {
                 let totalGaps = (sideEdges * CGFloat(2)) + (keyGap * CGFloat(mostKeysInRow - 1))
                 let returnWidth = (bounds.width - totalGaps) / CGFloat(mostKeysInRow)
                 return self.rounded(returnWidth)
-                }()
+            }()
             
             let processRow = { (row: [Key], frames: [CGRect], map: inout [Key:CGRect]) -> Void in
                 assert(row.count == frames.count, "row and frames don't match")
